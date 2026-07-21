@@ -313,10 +313,8 @@ window.saveAdminChanges = async function() {
     const btn = document.querySelector('.admin-toolbar .save-btn');
     btn.innerText = "Saving...";
     
-    // Preserve committee data when saving other site changes
-    let newData = {
-        committee_data: window.garrfSiteData.committee_data || []
-    };
+    // Preserve all existing data (from other pages) and merge with new edits
+    let newData = { ...window.garrfSiteData };
     
     document.querySelectorAll('[data-editable]').forEach(el => {
         const key = el.getAttribute('data-editable');
@@ -400,9 +398,21 @@ function renderCommittee(data) {
                         <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 250px; object-fit: cover; width: 100%;" alt="${member.name}">
                         <div class="card-body text-center" style="background: rgba(255,255,255,0.9);">
                             <h5 class="card-title fw-bold mb-1">${member.name || 'Name'}</h5>
-                            <p class="card-text text-muted small mb-0">${member.role || 'Role'}</p>
-                            ${hasDashboard ? '<div class="mt-2 small fw-bold text-primary">View Dashboard &rarr;</div>' : ''}
-                        </div>
+                            <p class="card-text text-muted small mb-2">${member.role || 'Role'}</p>`;
+                            
+                if (member.customFields && member.customFields.length > 0) {
+                    html += `<div class="text-start mt-3 mb-2 px-2" style="font-size: 0.85rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px;">`;
+                    member.customFields.forEach(field => {
+                        html += `<div class="mb-1"><strong>${field.label}:</strong> ${field.value}</div>`;
+                    });
+                    html += `</div>`;
+                }
+
+                if (hasDashboard) {
+                    html += `<div class="mt-2 small fw-bold text-primary">View Dashboard &rarr;</div>`;
+                }
+                
+                html += `</div>
                     </${cardTag}>
                 </div>`;
             });
@@ -450,6 +460,17 @@ window.openCommitteeManager = function() {
             
             if (cat.members) {
                 cat.members.forEach((mem, mIdx) => {
+                    if (!mem.customFields) mem.customFields = [];
+                    
+                    let fieldsHtml = '';
+                    mem.customFields.forEach((f, fIdx) => {
+                        fieldsHtml += `<div class="input-group input-group-sm mb-2">
+                            <input type="text" class="form-control bg-white" placeholder="Label (e.g. Qualification)" value="${f.label}" onchange="updateCustomField(${cIdx}, ${mIdx}, ${fIdx}, 'label', this.value)">
+                            <input type="text" class="form-control w-50 bg-white" placeholder="Value (e.g. Ph.D)" value="${f.value}" onchange="updateCustomField(${cIdx}, ${mIdx}, ${fIdx}, 'value', this.value)">
+                            <button class="btn btn-outline-danger" onclick="deleteCustomField(${cIdx}, ${mIdx}, ${fIdx})">X</button>
+                        </div>`;
+                    });
+
                     html += `<div class="border rounded p-3 mb-3 bg-light position-relative">
                         <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" onclick="deleteMem(${cIdx}, ${mIdx})">X</button>
                         <div class="row">
@@ -460,7 +481,13 @@ window.openCommitteeManager = function() {
                             <div class="col-md-9 mt-3 mt-md-0">
                                 <input type="text" class="form-control mb-2" placeholder="Member Name" value="${mem.name || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'name', this.value)">
                                 <input type="text" class="form-control mb-2" placeholder="Role/Designation" value="${mem.role || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'role', this.value)">
-                                <input type="text" class="form-control" placeholder="Dashboard Link (URL)" value="${mem.link || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'link', this.value)">
+                                <input type="text" class="form-control mb-2" placeholder="Dashboard Link (URL) - Optional" value="${mem.link || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'link', this.value)">
+                                
+                                <div class="mt-3 p-2 border rounded bg-white">
+                                    <h6 class="small text-muted fw-bold mb-2">Custom Fields (e.g. Qualifications, Achievements)</h6>
+                                    ${fieldsHtml}
+                                    <button class="btn btn-sm btn-outline-secondary mt-1" onclick="addCustomField(${cIdx}, ${mIdx})">+ Add Field</button>
+                                </div>
                             </div>
                         </div>
                     </div>`;
@@ -483,7 +510,15 @@ window.openCommitteeManager = function() {
     window.addCat = () => { data.push({categoryName: "New Category", members: []}); renderUI(); };
     window.updateMem = (cIdx, mIdx, field, val) => { data[cIdx].members[mIdx][field] = val; };
     window.deleteMem = (cIdx, mIdx) => { if(confirm("Delete member?")) { data[cIdx].members.splice(mIdx, 1); renderUI(); } };
-    window.addMem = (cIdx) => { data[cIdx].members.push({name: "", role: "", link: "", photo: ""}); renderUI(); };
+    window.addMem = (cIdx) => { data[cIdx].members.push({name: "", role: "", link: "", photo: "", customFields: []}); renderUI(); };
+    
+    window.addCustomField = (cIdx, mIdx) => { 
+        if (!data[cIdx].members[mIdx].customFields) data[cIdx].members[mIdx].customFields = [];
+        data[cIdx].members[mIdx].customFields.push({label: "", value: ""}); 
+        renderUI(); 
+    };
+    window.updateCustomField = (cIdx, mIdx, fIdx, key, val) => { data[cIdx].members[mIdx].customFields[fIdx][key] = val; };
+    window.deleteCustomField = (cIdx, mIdx, fIdx) => { data[cIdx].members[mIdx].customFields.splice(fIdx, 1); renderUI(); };
     
     window.uploadMemPhoto = (cIdx, mIdx) => {
         const fileInput = document.createElement('input');
