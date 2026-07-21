@@ -313,7 +313,11 @@ window.saveAdminChanges = async function() {
     const btn = document.querySelector('.admin-toolbar .save-btn');
     btn.innerText = "Saving...";
     
-    let newData = {};
+    // Preserve committee data when saving other site changes
+    let newData = {
+        committee_data: window.garrfSiteData.committee_data || []
+    };
+    
     document.querySelectorAll('[data-editable]').forEach(el => {
         const key = el.getAttribute('data-editable');
         if (el.tagName === 'IMG') {
@@ -426,10 +430,20 @@ window.openCommitteeManager = function() {
     
     const renderUI = () => {
         let html = '<h2 class="mb-4 text-dark">Manage Organizational Committee</h2>';
+        html += `<datalist id="division-names">
+            <option value="Virtual AISIA"></option>
+            <option value="Dr. APJ Abdul Kalam Research Centre"></option>
+            <option value="Rural Innovation Centre"></option>
+            <option value="Education & Capacity Building Centre"></option>
+            <option value="Women Research Initiative"></option>
+        </datalist>`;
         data.forEach((cat, cIdx) => {
             html += `<div class="card mb-4 border-primary">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <input type="text" class="form-control me-2" value="${cat.categoryName || ''}" onchange="updateCat(${cIdx}, this.value)" style="max-width: 300px;">
+                    <div>
+                        <input type="text" class="form-control me-2" list="division-names" placeholder="Category / Division Name" value="${cat.categoryName || ''}" onchange="updateCat(${cIdx}, this.value)" style="min-width: 300px; display: inline-block;">
+                        <div class="small text-light mt-1" style="font-size: 11px; opacity: 0.9;">(Select exact division name to link to homepage cards)</div>
+                    </div>
                     <button class="btn btn-sm btn-danger" onclick="deleteCat(${cIdx})">Delete Category</button>
                 </div>
                 <div class="card-body">`;
