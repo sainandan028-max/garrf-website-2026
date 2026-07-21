@@ -358,15 +358,29 @@ function renderCommittee(data) {
     const container = document.getElementById('committee-container');
     if (!container) return;
     
+    // Check for category filter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryFilter = urlParams.get('category');
+    
+    if (categoryFilter) {
+        data = data.filter(cat => cat.categoryName && cat.categoryName.toLowerCase() === categoryFilter.toLowerCase());
+        // Update page title dynamically
+        const pageTitle = document.querySelector('.page-header h1');
+        if (pageTitle) pageTitle.innerText = categoryFilter + " Team";
+    }
+    
     if (!data || data.length === 0) {
-        container.innerHTML = '<div class="text-center py-5 text-muted">No committee members found. Log into the Admin Portal to add some.</div>';
+        container.innerHTML = `<div class="text-center py-5 text-muted">No members found${categoryFilter ? ' for ' + categoryFilter : ''}. Log into the Admin Portal to add some.</div>`;
         return;
     }
     
     let html = '';
     data.forEach(category => {
-        html += `<h3 class="mt-5 mb-4 text-primary fw-bold" style="border-bottom: 2px solid var(--primary); padding-bottom: 10px;">${category.categoryName || 'Category'}</h3>`;
-        html += `<div class="row justify-content-center">`;
+        // Only show category header if we aren't already filtered to a single category
+        if (!categoryFilter) {
+            html += `<h3 class="mt-5 mb-4 text-primary fw-bold" style="border-bottom: 2px solid var(--primary); padding-bottom: 10px;">${category.categoryName || 'Category'}</h3>`;
+        }
+        html += `<div class="row justify-content-center ${categoryFilter ? 'mt-4' : ''}">`;
         
         if(category.members) {
             category.members.forEach(member => {
