@@ -283,7 +283,6 @@ function enableEditMode() {
     toolbar.className = 'admin-toolbar';
     toolbar.innerHTML = `
         <span style="color:white; font-weight:bold; margin-right:10px;">Edit Mode</span>
-        <button onclick="openCommitteeManager()" style="background: rgba(255,193,7,0.2); border: 1px solid #ffc107; color: #ffc107; font-weight: bold;">Manage Committee</button>
         <select id="admin-logo-style" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; outline: none; margin-right: 15px;">
             <option value="brand-elegant-gold" style="color: black;">Logo: Elegant Gold</option>
             <option value="brand-bold-white" style="color: black;">Logo: Bold White</option>
@@ -376,151 +375,187 @@ function renderCommittee(data) {
         return;
     }
     
+    const isAdmin = sessionStorage.getItem('adminMode') === 'true';
+    
     let html = '';
-    data.forEach(category => {
+    data.forEach((category, cIdx) => {
         // Only show category header if we aren't already filtered to a single category
         if (!categoryFilter) {
-            html += `<h3 class="mt-5 mb-4 text-primary fw-bold" style="border-bottom: 2px solid var(--primary); padding-bottom: 10px;">${category.categoryName || 'Category'}</h3>`;
+            html += `<div class="d-flex justify-content-between align-items-center mt-5 mb-4" style="border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px;">
+                        <h3 class="text-dark fw-bold mb-0" style="border-left: 4px solid #D4AF37; padding-left: 15px;">${category.categoryName || 'Category'}</h3>
+                        ${isAdmin ? `<div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editCategoryName(${cIdx})">✏️ Rename</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCat(${cIdx})">🗑️ Delete</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyCatLink('${category.categoryName ? category.categoryName.replace(/'/g, "\\'") : ''}')">🔗 Copy Link</button>
+                        </div>` : ''}
+                    </div>`;
         }
-        html += `<div class="row justify-content-center ${categoryFilter ? 'mt-4' : ''}">`;
+        
+        html += `<div class="netflix-row-wrapper"><div class="netflix-row">`;
         
         if(category.members) {
-            category.members.forEach(member => {
-                const hasDashboard = member.link && member.link.trim() !== "";
-                const cardTag = hasDashboard ? 'a' : 'div';
-                const linkAttr = hasDashboard ? `href="${member.link}" target="_blank"` : '';
-                const cursorStyle = hasDashboard ? 'cursor: pointer;' : '';
-                const hoverClass = hasDashboard ? 'committee-card-hover' : '';
+            category.members.forEach((member, mIdx) => {
+                const memberData = encodeURIComponent(JSON.stringify(member));
+                const onclickStr = isAdmin ? `openMemEditModal(${cIdx}, ${mIdx})` : `openMemberModal('${memberData.replace(/'/g, "\\'")}')`;
                 
                 html += `
-                <div class="col-md-3 col-sm-6 mb-4">
-                    <${cardTag} ${linkAttr} class="card h-100 shadow border-0 ${hoverClass}" style="border-radius: 15px; overflow: hidden; text-decoration: none; color: inherit; ${cursorStyle} transition: transform 0.3s, box-shadow 0.3s;">
-                        <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 250px; object-fit: cover; width: 100%;" alt="${member.name}">
-                        <div class="card-body text-center" style="background: rgba(255,255,255,0.9);">
-                            <h5 class="card-title fw-bold mb-1">${member.name || 'Name'}</h5>
-                            <p class="card-text text-muted small mb-2">${member.role || 'Role'}</p>`;
-                            
-                if (member.customFields && member.customFields.length > 0) {
-                    html += `<div class="text-start mt-3 mb-2 px-2" style="font-size: 0.85rem; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px;">`;
-                    member.customFields.forEach(field => {
-                        html += `<div class="mb-1"><strong>${field.label}:</strong> ${field.value}</div>`;
-                    });
-                    html += `</div>`;
-                }
-
-                if (hasDashboard) {
-                    html += `<div class="mt-2 small fw-bold text-primary">View Dashboard &rarr;</div>`;
-                }
-                
-                html += `</div>
-                    </${cardTag}>
+                <div class="netflix-card position-relative" onclick="${onclickStr}">
+                    ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
+                    <img src="${member.photo || 'css/fig.png'}" alt="${member.name}">
+                    <div class="netflix-card-body">
+                        <h5 class="netflix-card-title">${member.name || 'Name'}</h5>
+                        <p class="netflix-card-role">${member.role || 'Role'}</p>
+                        ${isAdmin ? `<div class="mt-2 text-warning small fw-bold">✏️ Click to Edit</div>` : ''}
+                    </div>
                 </div>`;
             });
         }
-        html += `</div>`;
+        
+        if (isAdmin) {
+            html += `
+            <div class="netflix-card d-flex align-items-center justify-content-center" style="border: 2px dashed #D4AF37; background: transparent; cursor: pointer;" onclick="addMem(${cIdx})">
+                <div class="text-center">
+                    <div style="font-size: 3rem; color: #D4AF37; line-height: 1;">+</div>
+                    <div class="fw-bold" style="color: #D4AF37;">Add Member</div>
+                </div>
+            </div>`;
+        }
+        
+        html += `</div></div>`;
     });
+    
+    if (isAdmin) {
+        html += `<div class="text-center mt-5 mb-5"><button class="btn btn-lg btn-success shadow" onclick="addCat()">+ Add New Category / Division</button></div>`;
+    }
     
     container.innerHTML = html;
 }
 
-window.openCommitteeManager = function() {
-    let data = JSON.parse(JSON.stringify(window.garrfSiteData.committee_data || []));
+window.openMemberModal = function(memberDataStr) {
+    const member = JSON.parse(decodeURIComponent(memberDataStr));
     
-    const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '0'; modal.style.left = '0'; modal.style.width = '100%'; modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    modal.style.zIndex = '100000';
-    modal.style.overflowY = 'auto';
-    modal.style.padding = '50px 20px';
+    const overlay = document.createElement('div');
+    overlay.className = 'committee-modal-overlay';
     
-    const content = document.createElement('div');
-    content.className = 'container bg-white p-4 rounded shadow';
-    content.style.maxWidth = '800px';
+    let fieldsHtml = '';
+    if (member.customFields && member.customFields.length > 0) {
+        member.customFields.forEach(f => {
+            fieldsHtml += `<div><div class="cm-field-label">${f.label}</div><div class="cm-field-value">${f.value}</div></div>`;
+        });
+    }
+    
+    let dashHtml = '';
+    if (member.link && member.link.trim() !== "") {
+        dashHtml = `<a href="${member.link}" target="_blank" class="btn btn-outline-light mt-3" style="border-color: #D4AF37; color: #D4AF37;">View Full Dashboard <i class="fas fa-external-link-alt ms-2"></i></a>`;
+    }
+    
+    overlay.innerHTML = `
+        <div class="committee-modal-content">
+            <button class="committee-modal-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            <img src="${member.photo || 'css/fig.png'}" class="committee-modal-img" alt="${member.name}">
+            <div class="committee-modal-body">
+                <h2 style="font-weight: 700; margin-bottom: 5px;">${member.name || 'Name'}</h2>
+                <div class="cm-role">${member.role || 'Role'}</div>
+                <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 20px;">
+                ${fieldsHtml}
+                ${dashHtml}
+            </div>
+        </div>
+    `;
+    
+    overlay.onclick = (e) => {
+        if (e.target === overlay) overlay.remove();
+    };
+    
+    document.body.appendChild(overlay);
+    setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+}
+
+window.deleteCat = (cIdx) => {
+    if(confirm("Delete category?")) {
+        window.garrfSiteData.committee_data.splice(cIdx, 1);
+        renderCommittee(window.garrfSiteData.committee_data);
+    }
+};
+
+window.addCat = () => {
+    window.garrfSiteData.committee_data.push({categoryName: "New Category", members: []});
+    renderCommittee(window.garrfSiteData.committee_data);
+    window.scrollTo(0, document.body.scrollHeight);
+};
+
+window.deleteMem = (cIdx, mIdx) => {
+    if(confirm("Delete member?")) {
+        window.garrfSiteData.committee_data[cIdx].members.splice(mIdx, 1);
+        renderCommittee(window.garrfSiteData.committee_data);
+    }
+};
+
+window.addMem = (cIdx) => {
+    window.garrfSiteData.committee_data[cIdx].members.push({name: "New Member", role: "Role", link: "", photo: "", customFields: []});
+    renderCommittee(window.garrfSiteData.committee_data);
+    openMemEditModal(cIdx, window.garrfSiteData.committee_data[cIdx].members.length - 1);
+};
+
+window.editCategoryName = (cIdx) => {
+    const newName = prompt("Enter new category name:", window.garrfSiteData.committee_data[cIdx].categoryName);
+    if (newName !== null) {
+        window.garrfSiteData.committee_data[cIdx].categoryName = newName.trim();
+        renderCommittee(window.garrfSiteData.committee_data);
+    }
+};
+
+window.openMemEditModal = function(cIdx, mIdx) {
+    let mem = JSON.parse(JSON.stringify(window.garrfSiteData.committee_data[cIdx].members[mIdx]));
+    if (!mem.customFields) mem.customFields = [];
+    
+    const overlay = document.createElement('div');
+    overlay.className = 'committee-modal-overlay';
+    overlay.style.zIndex = '105001';
     
     const renderUI = () => {
-        let html = '<h2 class="mb-4 text-dark">Manage Organizational Committee</h2>';
-        html += `<datalist id="division-names">
-            <option value="Virtual AISIA"></option>
-            <option value="Dr. APJ Abdul Kalam Research Centre"></option>
-            <option value="Rural Innovation Centre"></option>
-            <option value="Education & Capacity Building Centre"></option>
-            <option value="Women Research Initiative"></option>
-        </datalist>`;
-        data.forEach((cat, cIdx) => {
-            html += `<div class="card mb-4 border-primary">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <div>
-                        <input type="text" class="form-control me-2" list="division-names" placeholder="Category / Division Name" value="${cat.categoryName || ''}" onchange="updateCat(${cIdx}, this.value)" style="min-width: 300px; display: inline-block;">
-                        <div class="small text-light mt-1" style="font-size: 11px; opacity: 0.9;">(Select exact division name to link to homepage cards)</div>
-                    </div>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCat(${cIdx})">Delete Category</button>
-                </div>
-                <div class="card-body">`;
-            
-            if (cat.members) {
-                cat.members.forEach((mem, mIdx) => {
-                    if (!mem.customFields) mem.customFields = [];
-                    
-                    let fieldsHtml = '';
-                    mem.customFields.forEach((f, fIdx) => {
-                        fieldsHtml += `<div class="input-group input-group-sm mb-2">
-                            <input type="text" class="form-control bg-white" placeholder="Label (e.g. Qualification)" value="${f.label}" onchange="updateCustomField(${cIdx}, ${mIdx}, ${fIdx}, 'label', this.value)">
-                            <input type="text" class="form-control w-50 bg-white" placeholder="Value (e.g. Ph.D)" value="${f.value}" onchange="updateCustomField(${cIdx}, ${mIdx}, ${fIdx}, 'value', this.value)">
-                            <button class="btn btn-outline-danger" onclick="deleteCustomField(${cIdx}, ${mIdx}, ${fIdx})">X</button>
-                        </div>`;
-                    });
-
-                    html += `<div class="border rounded p-3 mb-3 bg-light position-relative">
-                        <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" onclick="deleteMem(${cIdx}, ${mIdx})">X</button>
-                        <div class="row">
-                            <div class="col-md-3 text-center">
-                                <img src="${mem.photo || 'css/fig.png'}" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer; border: 1px dashed #ccc;" onclick="uploadMemPhoto(${cIdx}, ${mIdx})" title="Click to upload photo">
-                                <div class="small mt-1 text-muted">Click to change</div>
-                            </div>
-                            <div class="col-md-9 mt-3 mt-md-0">
-                                <input type="text" class="form-control mb-2" placeholder="Member Name" value="${mem.name || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'name', this.value)">
-                                <input type="text" class="form-control mb-2" placeholder="Role/Designation" value="${mem.role || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'role', this.value)">
-                                <input type="text" class="form-control mb-2" placeholder="Dashboard Link (URL) - Optional" value="${mem.link || ''}" onchange="updateMem(${cIdx}, ${mIdx}, 'link', this.value)">
-                                
-                                <div class="mt-3 p-2 border rounded bg-white">
-                                    <h6 class="small text-muted fw-bold mb-2">Custom Fields (e.g. Qualifications, Achievements)</h6>
-                                    ${fieldsHtml}
-                                    <button class="btn btn-sm btn-outline-secondary mt-1" onclick="addCustomField(${cIdx}, ${mIdx})">+ Add Field</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-            }
-            html += `<button class="btn btn-sm btn-outline-primary" onclick="addMem(${cIdx})">+ Add Member</button>`;
-            html += `</div></div>`;
+        let fieldsHtml = '';
+        mem.customFields.forEach((f, fIdx) => {
+            fieldsHtml += `<div class="input-group input-group-sm mb-2">
+                <input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Label (e.g. Qualification)" value="${f.label}" onchange="mem.customFields[${fIdx}].label=this.value">
+                <input type="text" class="form-control w-50 bg-dark text-white border-secondary" placeholder="Value (e.g. Ph.D)" value="${f.value}" onchange="mem.customFields[${fIdx}].value=this.value">
+                <button class="btn btn-outline-danger" onclick="mem.customFields.splice(${fIdx}, 1); renderUI()">X</button>
+            </div>`;
         });
+
+        overlay.innerHTML = `
+            <div class="committee-modal-content" style="max-width: 600px; padding: 20px; display: block; overflow-y: auto;">
+                <h3 class="text-warning mb-4">✏️ Edit Member</h3>
+                <div class="text-center mb-3">
+                    <img src="${mem.photo || 'css/fig.png'}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; cursor: pointer; border: 2px dashed #D4AF37;" onclick="uploadMemPhotoInModal()" title="Click to upload photo">
+                    <div class="small mt-1 text-muted">Click to change photo</div>
+                </div>
+                
+                <label class="small text-muted mb-1">Name</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary mb-3" value="${mem.name || ''}" onchange="mem.name=this.value">
+                
+                <label class="small text-muted mb-1">Role / Designation</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary mb-3" value="${mem.role || ''}" onchange="mem.role=this.value">
+                
+                <label class="small text-muted mb-1">Dashboard Link (URL) - Optional</label>
+                <input type="text" class="form-control bg-dark text-white border-secondary mb-4" value="${mem.link || ''}" onchange="mem.link=this.value">
+                
+                <h6 class="text-warning border-bottom border-secondary pb-2 mb-3">Custom Fields</h6>
+                ${fieldsHtml}
+                <button class="btn btn-sm btn-outline-secondary mt-2 mb-4" onclick="mem.customFields.push({label:'', value:''}); renderUI()">+ Add Custom Field</button>
+                
+                <div class="d-flex justify-content-end gap-2 mt-2 pt-3 border-top border-secondary">
+                    <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Cancel</button>
+                    <button class="btn btn-warning text-dark fw-bold" onclick="saveMemEdit()">Save Member</button>
+                </div>
+            </div>
+        `;
         
-        html += `<button class="btn btn-success me-2" onclick="addCat()">+ Add Category</button>`;
-        html += `<hr><div class="d-flex justify-content-end">
-            <button class="btn btn-secondary me-2" onclick="closeComm()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveComm()">Apply Changes</button>
-        </div>`;
-        content.innerHTML = html;
+        window.renderUI = renderUI;
+        window.mem = mem;
     };
     
-    window.updateCat = (cIdx, val) => { data[cIdx].categoryName = val; };
-    window.deleteCat = (cIdx) => { if(confirm("Delete category?")) { data.splice(cIdx, 1); renderUI(); } };
-    window.addCat = () => { data.push({categoryName: "New Category", members: []}); renderUI(); };
-    window.updateMem = (cIdx, mIdx, field, val) => { data[cIdx].members[mIdx][field] = val; };
-    window.deleteMem = (cIdx, mIdx) => { if(confirm("Delete member?")) { data[cIdx].members.splice(mIdx, 1); renderUI(); } };
-    window.addMem = (cIdx) => { data[cIdx].members.push({name: "", role: "", link: "", photo: "", customFields: []}); renderUI(); };
-    
-    window.addCustomField = (cIdx, mIdx) => { 
-        if (!data[cIdx].members[mIdx].customFields) data[cIdx].members[mIdx].customFields = [];
-        data[cIdx].members[mIdx].customFields.push({label: "", value: ""}); 
-        renderUI(); 
-    };
-    window.updateCustomField = (cIdx, mIdx, fIdx, key, val) => { data[cIdx].members[mIdx].customFields[fIdx][key] = val; };
-    window.deleteCustomField = (cIdx, mIdx, fIdx) => { data[cIdx].members[mIdx].customFields.splice(fIdx, 1); renderUI(); };
-    
-    window.uploadMemPhoto = (cIdx, mIdx) => {
+    window.uploadMemPhotoInModal = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
@@ -530,7 +565,7 @@ window.openCommitteeManager = function() {
                 if (file.size > 2 * 1024 * 1024) { alert("File too large (max 2MB)"); return; }
                 const reader = new FileReader();
                 reader.onload = (re) => {
-                    data[cIdx].members[mIdx].photo = re.target.result;
+                    mem.photo = re.target.result;
                     renderUI();
                 };
                 reader.readAsDataURL(file);
@@ -539,16 +574,19 @@ window.openCommitteeManager = function() {
         fileInput.click();
     };
     
-    window.closeComm = () => { document.body.removeChild(modal); };
-    window.saveComm = () => { 
-        window.garrfSiteData.committee_data = data; 
-        document.body.removeChild(modal);
-        if(typeof renderCommittee !== 'undefined') renderCommittee(data);
-        alert("Applied to page! Click 'Save to Database' in the toolbar to make it permanent.");
+    window.saveMemEdit = () => {
+        window.garrfSiteData.committee_data[cIdx].members[mIdx] = mem;
+        overlay.remove();
+        renderCommittee(window.garrfSiteData.committee_data);
     };
     
-    modal.appendChild(content);
-    document.body.appendChild(modal);
+    document.body.appendChild(overlay);
     renderUI();
+    setTimeout(() => { overlay.style.opacity = '1'; }, 10);
 };
 
+window.copyCatLink = (catName) => {
+    if (!catName) { alert("Please enter a category name first!"); return; }
+    const url = `committee.html?category=${encodeURIComponent(catName)}`;
+    navigator.clipboard.writeText(url).then(() => alert(`Link copied to clipboard!\n\n${url}\n\nYou can now paste this using the 🔗 button on any card in the main UI.`));
+};
