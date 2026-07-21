@@ -245,13 +245,20 @@ padding:70px 0;
 }
 
 .stats h1{
-
 font-size:55px;
+}
 
-font-weight:700;
+/*=============================
+Committee Section
+=============================*/
+.committee-card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+}
 
-color:var(--secondary);
-
+.stats h1 {
+    font-weight: 700;
+    color: var(--secondary);
 }
 
 .stats p{
