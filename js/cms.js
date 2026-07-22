@@ -584,6 +584,30 @@ function renderCommittee(data) {
     }
     
     container.innerHTML = html;
+
+    // Check if a specific member was requested via URL and open their popup automatically
+    const targetMember = urlParams.get('member');
+    if (targetMember) {
+        let foundMember = null;
+        for (let cat of data) {
+            if (cat.members) {
+                for (let m of cat.members) {
+                    if (m.name && m.name.toLowerCase() === targetMember.toLowerCase()) {
+                        foundMember = m;
+                        break;
+                    }
+                }
+            }
+            if (foundMember) break;
+        }
+        
+        if (foundMember) {
+            const memberDataStr = encodeURIComponent(JSON.stringify(foundMember)).replace(/'/g, "\\'");
+            setTimeout(() => {
+                window.openMemberModal(memberDataStr);
+            }, 300); // slight delay so rendering can complete smoothly
+        }
+    }
 }
 
 window.openMemberModal = function(memberDataStr) {
