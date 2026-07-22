@@ -174,15 +174,30 @@ function enableEditMode() {
                     fileInput.onchange = (e) => {
                         const file = e.target.files[0];
                         if (file) {
-                            if (file.size > 2 * 1024 * 1024) {
-                                alert("File is too large. Please upload an image smaller than 2MB.");
-                                return;
-                            }
+                            // Jugad: Client-side Image Compression using Canvas to save DB space
                             const reader = new FileReader();
                             reader.onload = (readerEvent) => {
-                                el.src = readerEvent.target.result;
-                                el.style.border = 'none';
-                                alert("Image uploaded temporarily! Click 'Save Changes' to permanently save it to the database.");
+                                const img = new Image();
+                                img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    const MAX_WIDTH = 800;
+                                    const MAX_HEIGHT = 800;
+                                    let width = img.width;
+                                    let height = img.height;
+                                    if (width > height && width > MAX_WIDTH) {
+                                        height *= MAX_WIDTH / width; width = MAX_WIDTH;
+                                    } else if (height > MAX_HEIGHT) {
+                                        width *= MAX_HEIGHT / height; height = MAX_HEIGHT;
+                                    }
+                                    canvas.width = width; canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, width, height);
+                                    
+                                    el.src = canvas.toDataURL('image/webp', 0.8);
+                                    el.style.border = 'none';
+                                    alert("Image heavily compressed and uploaded temporarily! Click 'Save to Database' to permanently save it.");
+                                };
+                                img.src = readerEvent.target.result;
                             };
                             reader.readAsDataURL(file);
                         }
@@ -566,11 +581,29 @@ window.openMemEditModal = function(cIdx, mIdx) {
         fileInput.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 2 * 1024 * 1024) { alert("File too large (max 2MB)"); return; }
                 const reader = new FileReader();
                 reader.onload = (re) => {
-                    mem.photo = re.target.result;
-                    renderUI();
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 400; // Smaller limit since it's just a portrait
+                        const MAX_HEIGHT = 400;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height && width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width; width = MAX_WIDTH;
+                        } else if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height; height = MAX_HEIGHT;
+                        }
+                        canvas.width = width; canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Convert to heavily compressed webp
+                        mem.photo = canvas.toDataURL('image/webp', 0.7);
+                        renderUI();
+                    };
+                    img.src = re.target.result;
                 };
                 reader.readAsDataURL(file);
             }
