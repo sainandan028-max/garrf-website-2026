@@ -427,7 +427,7 @@ function renderCommittee(data) {
                 let allFieldsHtml = '';
                 if (member.customFields && member.customFields.length > 0) {
                     member.customFields.forEach(f => {
-                        allFieldsHtml += `<p class="mt-3 mb-3" style="color: #444; font-size: 0.95rem; line-height: 1.7; text-align: justify;">${f.value}</p>`;
+                        allFieldsHtml += `<p class="mt-3 mb-3" style="color: #000; font-size: 0.95rem; line-height: 1.7; text-align: justify;">${f.value}</p>`;
                     });
                 }
 
