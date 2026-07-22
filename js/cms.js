@@ -485,6 +485,9 @@ function renderCommittee(data) {
 
                 if (isFullWidth) {
                     // Screenshot 1: Full Width Presentation Layout (No Card)
+                    const isPatron = category.categoryName.toLowerCase().includes('patron');
+                    const roleColor = isPatron ? '#000' : '#28a745';
+                    
                     html += `
                     <div class="col-lg-10 mb-5 position-relative text-center" onclick="${onclickStr}" style="cursor: pointer;">
                         ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
@@ -494,7 +497,7 @@ function renderCommittee(data) {
                         </div>
                         
                         <h2 class="fw-bold mb-2" style="color: #005582;">${member.name || 'Name'}</h2>
-                        <h5 class="fw-semibold mb-4" style="color: #28a745;">${member.role || 'Role'}</h5>
+                        <h5 class="fw-semibold mb-4" style="color: ${roleColor};">${member.role || 'Role'}</h5>
                         
                         ${allFieldsHtml}
                         
