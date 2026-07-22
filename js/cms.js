@@ -296,20 +296,28 @@ function enableEditMode() {
             btn.style.display = 'none';
             
         } else {
-            // Normal Text
-            el.contentEditable = "false";
-            el.title = "Double-click to edit text.";
+            const isInsideLinkBox = el.closest('[data-editable-link]') !== null;
             
-            el.addEventListener('dblclick', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                el.contentEditable = "true";
-                el.focus();
-            });
-
-            el.addEventListener('blur', () => {
+            if (isInsideLinkBox) {
+                // Text inside a clickable box: Double-click to edit, so single-click can navigate the box
                 el.contentEditable = "false";
-            });
+                el.title = "Double-click to edit text. Single click to navigate.";
+                
+                el.addEventListener('dblclick', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    el.contentEditable = "true";
+                    el.focus();
+                });
+
+                el.addEventListener('blur', () => {
+                    el.contentEditable = "false";
+                });
+            } else {
+                // Normal Standalone Text: Single-click to edit naturally
+                el.contentEditable = "true";
+                el.title = "Click to edit text.";
+            }
             
             // Strip formatting on paste
             el.addEventListener('paste', (e) => {
