@@ -427,7 +427,7 @@ function renderCommittee(data) {
                 let allFieldsHtml = '';
                 if (member.customFields && member.customFields.length > 0) {
                     member.customFields.forEach(f => {
-                        allFieldsHtml += `<p class="text-muted mt-3 mb-3" style="font-size: 0.95rem; line-height: 1.7; text-align: justify;">${f.value}</p>`;
+                        allFieldsHtml += `<p class="mt-3 mb-3" style="color: #444; font-size: 0.95rem; line-height: 1.7; text-align: justify;">${f.value}</p>`;
                     });
                 }
 
@@ -436,6 +436,10 @@ function renderCommittee(data) {
                     html += `
                     <div class="col-lg-10 mb-5 position-relative text-center" onclick="${onclickStr}" style="cursor: pointer;">
                         ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
+                        
+                        <div class="mb-4">
+                            <img src="${member.photo || 'css/fig.png'}" alt="${member.name}" style="width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        </div>
                         
                         <h2 class="fw-bold mb-2" style="color: #005582;">${member.name || 'Name'}</h2>
                         <h5 class="fw-semibold mb-4" style="color: #28a745;">${member.role || 'Role'}</h5>
