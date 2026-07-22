@@ -232,15 +232,39 @@ function enableEditMode() {
             btn.style.display = 'none';
 
         } else if (el.tagName === 'A') {
-            el.contentEditable = "true";
-            el.title = "Click to edit text. Ctrl+Click to follow link.";
+            el.contentEditable = "false";
+            el.title = "Double-click to edit text. Single click to navigate.";
+            
+            let clickTimer;
             el.addEventListener('click', (e) => {
-                // If they hold Ctrl/Cmd, let them navigate naturally.
-                if (e.ctrlKey || e.metaKey) {
-                    return; // Allow navigation
+                if (el.contentEditable === "true") {
+                    e.preventDefault(); // Don't navigate while editing
+                    return;
                 }
-                // Otherwise, prevent navigation so they can click and type to edit spelling
+                
+                e.preventDefault(); // Stop immediate navigation to wait for dblclick
+                clearTimeout(clickTimer);
+                clickTimer = setTimeout(() => {
+                    window.location.href = el.getAttribute('href') || el.href;
+                }, 250);
+            });
+
+            el.addEventListener('dblclick', (e) => {
+                clearTimeout(clickTimer);
                 e.preventDefault();
+                e.stopPropagation();
+                el.contentEditable = "true";
+                el.focus();
+            });
+
+            el.addEventListener('blur', () => {
+                el.contentEditable = "false";
+            });
+            
+            el.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+                document.execCommand('insertText', false, text);
             });
             
             // Wrap the A tag
@@ -255,7 +279,8 @@ function enableEditMode() {
             btn.className = 'admin-edit-btn';
             btn.innerHTML = '🔗';
             btn.title = "Edit Link URL";
-            btn.style.right = '-25px'; // Push it outside the text
+            btn.style.right = '0'; 
+            btn.style.top = '-25px'; 
             btn.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -265,37 +290,27 @@ function enableEditMode() {
             btn.contentEditable = "false";
             wrapper.appendChild(btn);
 
-            // Link Navigate Button
-            const navBtn = document.createElement('button');
-            navBtn.className = 'admin-edit-btn';
-            navBtn.innerHTML = '↗️';
-            navBtn.title = "Go to Page";
-            navBtn.style.right = '-55px'; // Push it further outside
-            navBtn.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                window.location.href = el.getAttribute('href') || el.href;
-            };
-            navBtn.contentEditable = "false";
-            wrapper.appendChild(navBtn);
-            
-            // Add hover effect to the wrapper to show buttons
-            wrapper.addEventListener('mouseenter', () => {
-                btn.style.display = 'flex';
-                navBtn.style.display = 'flex';
-            });
-            wrapper.addEventListener('mouseleave', () => {
-                btn.style.display = 'none';
-                navBtn.style.display = 'none';
-            });
-            
-            // initially hide buttons
+            // Add hover effect to the wrapper to show button
+            wrapper.addEventListener('mouseenter', () => btn.style.display = 'flex');
+            wrapper.addEventListener('mouseleave', () => btn.style.display = 'none');
             btn.style.display = 'none';
-            navBtn.style.display = 'none';
             
         } else {
             // Normal Text
-            el.contentEditable = "true";
+            el.contentEditable = "false";
+            el.title = "Double-click to edit text.";
+            
+            el.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                el.contentEditable = "true";
+                el.focus();
+            });
+
+            el.addEventListener('blur', () => {
+                el.contentEditable = "false";
+            });
+            
             // Strip formatting on paste
             el.addEventListener('paste', (e) => {
                 e.preventDefault();
@@ -311,6 +326,26 @@ function enableEditMode() {
             el.style.position = 'relative';
         }
         
+        const key = el.getAttribute('data-editable-link');
+        
+        let boxClickTimer;
+        el.addEventListener('click', (ev) => {
+            // Ignore if clicking on a button or link inside the box
+            if (el.tagName !== 'A' && (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON' || ev.target.closest('button'))) return;
+            // Ignore if currently editing text inside the box
+            if (ev.target.isContentEditable) return;
+            
+            clearTimeout(boxClickTimer);
+            boxClickTimer = setTimeout(() => {
+                const currentLink = window.garrfSiteData[key];
+                if (currentLink) window.location.href = currentLink;
+            }, 250);
+        });
+
+        el.addEventListener('dblclick', () => {
+            clearTimeout(boxClickTimer);
+        });
+        
         const btn = document.createElement('button');
         btn.className = 'admin-edit-btn';
         btn.innerHTML = '🔗';
@@ -325,16 +360,10 @@ function enableEditMode() {
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const key = el.getAttribute('data-editable-link');
             const currentLink = window.garrfSiteData[key] || '';
             const newHref = prompt("Enter link for this box (e.g. https://... or committee.html):", currentLink);
             if (newHref !== null) {
                 window.garrfSiteData[key] = newHref;
-                el.style.cursor = 'pointer';
-                el.onclick = (ev) => {
-                    if (el.tagName !== 'A' && (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON' || ev.target.closest('button'))) return;
-                    window.location.href = newHref;
-                };
             }
         };
         
