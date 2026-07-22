@@ -406,7 +406,9 @@ function renderCommittee(data) {
                     </div>`;
         }
         
-        html += `<div class="committee-grid"><div class="row">`;
+        const isFullWidth = category.categoryName.toLowerCase().includes('patron') || category.categoryName.toLowerCase().includes('leadership');
+        
+        html += `<div class="committee-grid"><div class="row justify-content-center">`;
         
         if(category.members) {
             category.members.forEach((member, mIdx) => {
@@ -416,26 +418,61 @@ function renderCommittee(data) {
                 let linksHtml = '';
                 if (member.link && member.link.trim() !== '') {
                     if (member.link.includes('linkedin.com')) {
-                        linksHtml = `<div class="mt-4"><a href="${member.link}" target="_blank" class="linkedin-btn" onclick="event.stopPropagation()"><i class="fab fa-linkedin"></i> LinkedIn</a></div>`;
+                        linksHtml = `<a href="${member.link}" target="_blank" class="linkedin-btn"><i class="fab fa-linkedin"></i> LinkedIn</a>`;
                     } else {
-                        linksHtml = `<div class="mt-4"><a href="${member.link}" target="_blank" class="website-btn" onclick="event.stopPropagation()"><i class="fas fa-globe"></i> Website</a></div>`;
+                        linksHtml = `<a href="${member.link}" target="_blank" class="website-btn"><i class="fas fa-globe"></i> Website</a>`;
                     }
                 }
+                
+                let allFieldsHtml = '';
+                if (member.customFields && member.customFields.length > 0) {
+                    member.customFields.forEach(f => {
+                        allFieldsHtml += `<p class="text-muted mt-3 mb-3" style="font-size: 0.95rem; line-height: 1.7; text-align: justify;">${f.value}</p>`;
+                    });
+                }
 
-                html += `
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="grid-card h-100 position-relative" onclick="${onclickStr}">
+                if (isFullWidth) {
+                    // Screenshot 1: Full Width Presentation Layout (No Card)
+                    html += `
+                    <div class="col-lg-10 mb-5 position-relative text-center" onclick="${onclickStr}" style="cursor: pointer;">
                         ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
-                        <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 280px; object-fit: cover; object-position: top;" alt="${member.name}">
-                        <div class="grid-card-body">
-                            <h3 class="grid-card-title">${member.name || 'Name'}</h3>
-                            <h5 class="grid-card-role">${member.role || 'Role'}</h5>
-                            ${member.customFields && member.customFields.length > 0 ? `<p class="small text-muted mt-2 mb-0" style="font-size: 0.85rem; line-height: 1.5;">${member.customFields[0].value}</p>` : ''}
+                        
+                        <h2 class="fw-bold mb-2" style="color: #005582;">${member.name || 'Name'}</h2>
+                        <h5 class="fw-semibold mb-4" style="color: #28a745;">${member.role || 'Role'}</h5>
+                        
+                        ${allFieldsHtml}
+                        
+                        <div class="mt-4 d-flex justify-content-center gap-3">
                             ${linksHtml}
-                            ${isAdmin ? `<div class="mt-auto pt-3 text-primary small fw-bold">✏️ Click to Edit</div>` : ''}
                         </div>
-                    </div>
-                </div>`;
+                        
+                        ${isAdmin ? `<div class="mt-4 text-primary small fw-bold text-center">✏️ Click anywhere to Edit</div>` : ''}
+                    </div>`;
+                } else {
+                    // Screenshot 2: Circular Image Grid Card
+                    html += `
+                    <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                        <div class="grid-card h-100 position-relative" onclick="${onclickStr}">
+                            ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
+                            
+                            <div class="text-center pt-4">
+                                <img src="${member.photo || 'css/fig.png'}" alt="${member.name}" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            </div>
+                            
+                            <div class="grid-card-body pt-3 pb-4 px-4 text-center">
+                                <h4 class="fw-bold mb-2" style="color: #005582; font-size: 1.3rem;">${member.name || 'Name'}</h4>
+                                <h6 class="fw-semibold mb-3" style="color: #28a745;">${member.role || 'Role'}</h6>
+                                ${member.customFields && member.customFields.length > 0 ? `<p class="text-muted mb-0" style="font-size: 0.9rem; line-height: 1.5;">${member.customFields[0].value}</p>` : ''}
+                                
+                                <div class="mt-4 pt-2">
+                                    ${linksHtml}
+                                </div>
+                                
+                                ${isAdmin ? `<div class="mt-auto pt-4 text-primary small fw-bold">✏️ Click to Edit</div>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }
             });
         }
         
@@ -474,9 +511,13 @@ window.openMemberModal = function(memberDataStr) {
         });
     }
     
-    let dashHtml = '';
-    if (member.link && member.link.trim() !== "") {
-        dashHtml = `<a href="${member.link}" target="_blank" class="btn btn-outline-light mt-3" style="border-color: #D4AF37; color: #D4AF37;">View Full Dashboard <i class="fas fa-external-link-alt ms-2"></i></a>`;
+    let linksHtml = '';
+    if (member.link && member.link.trim() !== '') {
+        if (member.link.includes('linkedin.com')) {
+            linksHtml = `<a href="${member.link}" target="_blank" class="linkedin-btn mt-3"><i class="fab fa-linkedin"></i> LinkedIn</a>`;
+        } else {
+            linksHtml = `<a href="${member.link}" target="_blank" class="website-btn mt-3"><i class="fas fa-globe"></i> Website</a>`;
+        }
     }
     
     overlay.innerHTML = `
@@ -484,11 +525,11 @@ window.openMemberModal = function(memberDataStr) {
             <button class="committee-modal-close" onclick="this.parentElement.parentElement.remove()">×</button>
             <img src="${member.photo || 'css/fig.png'}" class="committee-modal-img" alt="${member.name}">
             <div class="committee-modal-body">
-                <h2 style="font-weight: 700; margin-bottom: 5px;">${member.name || 'Name'}</h2>
+                <h2 style="font-weight: 700; margin-bottom: 5px; color: #222;">${member.name || 'Name'}</h2>
                 <div class="cm-role">${member.role || 'Role'}</div>
-                <hr style="border-color: rgba(255,255,255,0.1); margin-bottom: 20px;">
+                <hr style="border-color: rgba(0,0,0,0.1); margin-bottom: 20px;">
                 ${fieldsHtml}
-                ${dashHtml}
+                ${linksHtml}
             </div>
         </div>
     `;

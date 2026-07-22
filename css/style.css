@@ -804,8 +804,8 @@ Premium Grid Committee UI
 .linkedin-btn {
     background-color: #0077b5;
     color: white;
-    padding: 8px 16px;
-    border-radius: 5px;
+    padding: 8px 24px;
+    border-radius: 50rem;
     text-decoration: none;
     font-weight: 500;
     display: inline-block;
@@ -819,8 +819,8 @@ Premium Grid Committee UI
 .website-btn {
     background-color: #28a745;
     color: white;
-    padding: 8px 16px;
-    border-radius: 5px;
+    padding: 8px 24px;
+    border-radius: 50rem;
     text-decoration: none;
     font-weight: 500;
     display: inline-block;
@@ -846,8 +846,8 @@ Premium Grid Committee UI
     transition: opacity 0.3s ease;
 }
 .committee-modal-content {
-    background: #111;
-    border: 1px solid rgba(212, 175, 55, 0.3);
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 20px;
     width: 90%;
     max-width: 900px;
@@ -855,8 +855,8 @@ Premium Grid Committee UI
     overflow-y: auto;
     transform: translateY(30px);
     transition: transform 0.3s ease;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    color: white;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    color: #222;
     display: flex;
     flex-direction: column;
 }
@@ -886,13 +886,13 @@ Premium Grid Committee UI
     position: absolute;
     top: 15px; right: 20px;
     font-size: 24px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(0,0,0,0.4);
     cursor: pointer;
     background: none; border: none;
     transition: color 0.2s;
     z-index: 10;
 }
-.committee-modal-close:hover { color: #fff; }
-.cm-role { color: #D4AF37; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
+.committee-modal-close:hover { color: #000; }
+.cm-role { color: #28a745; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
 .cm-field-label { color: #888; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
-.cm-field-value { color: #eee; font-size: 1rem; margin-bottom: 15px; }
+.cm-field-value { color: #333; font-size: 1rem; margin-bottom: 15px; }
