@@ -49,12 +49,24 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    // 3.5 Apply Committee Data
+    // 3.5 Apply Box Links
+    document.querySelectorAll('[data-editable-link]').forEach(el => {
+        const key = el.getAttribute('data-editable-link');
+        if (siteData.hasOwnProperty(key) && siteData[key].trim() !== '') {
+            el.style.cursor = 'pointer';
+            el.onclick = (e) => {
+                if (el.tagName !== 'A' && (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('button'))) return;
+                window.location.href = siteData[key];
+            };
+        }
+    });
+
+    // 4. Apply Committee Data
     if (document.getElementById('committee-container')) {
         renderCommittee(siteData.committee_data || []);
     }
 
-    // 4. Initialize Admin Mode Edit Features
+    // 5. Initialize Admin Mode Edit Features
     if (isAdmin) {
         enableEditMode();
     }
@@ -291,6 +303,46 @@ function enableEditMode() {
                 document.execCommand('insertText', false, text);
             });
         }
+    });
+
+    // Handle Box Links
+    document.querySelectorAll('[data-editable-link]').forEach(el => {
+        if (window.getComputedStyle(el).position === 'static') {
+            el.style.position = 'relative';
+        }
+        
+        const btn = document.createElement('button');
+        btn.className = 'admin-edit-btn';
+        btn.innerHTML = '🔗';
+        btn.title = "Edit Box Link";
+        btn.style.width = 'auto';
+        btn.style.padding = '0 8px';
+        btn.style.borderRadius = '20px';
+        btn.style.top = '10px';
+        btn.style.right = '10px';
+        btn.style.zIndex = '99999';
+        
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = el.getAttribute('data-editable-link');
+            const currentLink = window.garrfSiteData[key] || '';
+            const newHref = prompt("Enter link for this box (e.g. https://... or committee.html):", currentLink);
+            if (newHref !== null) {
+                window.garrfSiteData[key] = newHref;
+                el.style.cursor = 'pointer';
+                el.onclick = (ev) => {
+                    if (el.tagName !== 'A' && (ev.target.tagName === 'A' || ev.target.tagName === 'BUTTON' || ev.target.closest('button'))) return;
+                    window.location.href = newHref;
+                };
+            }
+        };
+        
+        el.appendChild(btn);
+        
+        el.addEventListener('mouseenter', () => btn.style.display = 'flex');
+        el.addEventListener('mouseleave', () => btn.style.display = 'none');
+        btn.style.display = 'none';
     });
 
     // Create Toolbar
