@@ -415,13 +415,14 @@ function renderCommittee(data) {
                 
                 html += `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="grid-card position-relative" onclick="${onclickStr}">
+                    <div class="grid-card h-100 position-relative" onclick="${onclickStr}">
                         ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
-                        <img src="${member.photo || 'css/fig.png'}" alt="${member.name}">
+                        <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 300px; object-fit: cover; object-position: top;" alt="${member.name}">
                         <div class="grid-card-body">
-                            <h5 class="grid-card-title">${member.name || 'Name'}</h5>
-                            <p class="grid-card-role">${member.role || 'Role'}</p>
-                            ${isAdmin ? `<div class="mt-2 text-warning small fw-bold">✏️ Click to Edit</div>` : ''}
+                            <h4 class="fw-bold text-white mb-2" style="font-size: 1.15rem;">${member.name || 'Name'}</h4>
+                            <p class="fw-semibold mb-1" style="color: #D4AF37; font-size: 0.9rem;">${member.role || 'Role'}</p>
+                            ${member.customFields && member.customFields.length > 0 ? `<p class="small text-muted mt-2 mb-0" style="font-size: 0.8rem; line-height: 1.4;">${member.customFields[0].value}</p>` : ''}
+                            ${isAdmin ? `<div class="mt-auto pt-3 text-warning small fw-bold">✏️ Click to Edit</div>` : ''}
                         </div>
                     </div>
                 </div>`;
@@ -431,10 +432,10 @@ function renderCommittee(data) {
         if (isAdmin) {
             html += `
             <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="grid-card d-flex align-items-center justify-content-center" style="border: 2px dashed #D4AF37; background: transparent; cursor: pointer;" onclick="addMem(${cIdx})">
+                <div class="grid-card h-100 d-flex align-items-center justify-content-center" style="border: 2px dashed #D4AF37; background: rgba(0,0,0,0.2); cursor: pointer; min-height: 400px;" onclick="addMem(${cIdx})">
                     <div class="text-center">
                         <div style="font-size: 3rem; color: #D4AF37; line-height: 1;">+</div>
-                        <div class="fw-bold" style="color: #D4AF37;">Add Member</div>
+                        <div class="fw-bold mt-2" style="color: #D4AF37;">Add Member</div>
                     </div>
                 </div>
             </div>`;
