@@ -413,16 +413,26 @@ function renderCommittee(data) {
                 const memberData = encodeURIComponent(JSON.stringify(member));
                 const onclickStr = isAdmin ? `openMemEditModal(${cIdx}, ${mIdx})` : `openMemberModal('${memberData.replace(/'/g, "\\'")}')`;
                 
+                let linksHtml = '';
+                if (member.link && member.link.trim() !== '') {
+                    if (member.link.includes('linkedin.com')) {
+                        linksHtml = `<div class="mt-4"><a href="${member.link}" target="_blank" class="linkedin-btn" onclick="event.stopPropagation()"><i class="fab fa-linkedin"></i> LinkedIn</a></div>`;
+                    } else {
+                        linksHtml = `<div class="mt-4"><a href="${member.link}" target="_blank" class="website-btn" onclick="event.stopPropagation()"><i class="fas fa-globe"></i> Website</a></div>`;
+                    }
+                }
+
                 html += `
                 <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="grid-card h-100 position-relative" onclick="${onclickStr}">
                         ${isAdmin ? `<button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" style="z-index: 10;" onclick="event.stopPropagation(); deleteMem(${cIdx}, ${mIdx})">🗑️</button>` : ''}
-                        <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 300px; object-fit: cover; object-position: top;" alt="${member.name}">
+                        <img src="${member.photo || 'css/fig.png'}" class="card-img-top" style="height: 280px; object-fit: cover; object-position: top;" alt="${member.name}">
                         <div class="grid-card-body">
-                            <h4 class="fw-bold text-white mb-2" style="font-size: 1.15rem;">${member.name || 'Name'}</h4>
-                            <p class="fw-semibold mb-1" style="color: #D4AF37; font-size: 0.9rem;">${member.role || 'Role'}</p>
-                            ${member.customFields && member.customFields.length > 0 ? `<p class="small text-muted mt-2 mb-0" style="font-size: 0.8rem; line-height: 1.4;">${member.customFields[0].value}</p>` : ''}
-                            ${isAdmin ? `<div class="mt-auto pt-3 text-warning small fw-bold">✏️ Click to Edit</div>` : ''}
+                            <h3 class="grid-card-title">${member.name || 'Name'}</h3>
+                            <h5 class="grid-card-role">${member.role || 'Role'}</h5>
+                            ${member.customFields && member.customFields.length > 0 ? `<p class="small text-muted mt-2 mb-0" style="font-size: 0.85rem; line-height: 1.5;">${member.customFields[0].value}</p>` : ''}
+                            ${linksHtml}
+                            ${isAdmin ? `<div class="mt-auto pt-3 text-primary small fw-bold">✏️ Click to Edit</div>` : ''}
                         </div>
                     </div>
                 </div>`;
