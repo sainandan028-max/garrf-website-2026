@@ -30,7 +30,7 @@ font-family:'Poppins',sans-serif;
 
 background:#0a0a0a;
 
-color:#444;
+color:#e0e0e0;
 
 line-height:1.7;
 
@@ -212,7 +212,7 @@ font-size:42px;
 
 font-weight:700;
 
-color:var(--primary);
+color:var(--secondary);
 
 margin-bottom:35px;
 
