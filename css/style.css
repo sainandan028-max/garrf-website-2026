@@ -360,7 +360,7 @@ Research Grid
 .research-grid span {
 
     background: white;
-    
+
     color: var(--primary);
 
     padding: 20px;
@@ -491,6 +491,10 @@ News
 
     font-weight: 700;
 
+}
+
+.news-card p {
+    color: #1A1A1A;
 }
 
 /*=============================
