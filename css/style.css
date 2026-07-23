@@ -212,10 +212,14 @@ Sections
 
     font-weight: 700;
 
-    color: var(--primary);
+    color: white;
 
     margin-bottom: 35px;
 
+}
+
+.section.bg-light h2 {
+    color: var(--primary);
 }
 
 .section p {
@@ -356,6 +360,8 @@ Research Grid
 .research-grid span {
 
     background: white;
+    
+    color: var(--primary);
 
     padding: 20px;
 
